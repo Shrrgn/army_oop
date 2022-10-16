@@ -5,6 +5,7 @@ from typing import Generic, TypeVar
 
 from abstract_unit import AbstractUnit
 from generic_item import GenericItem
+from utils import UnitItemsSet, ItemStats
 
 
 GenericUnit = TypeVar('GenericUnit')  # I am not sure that it is correct
@@ -24,7 +25,7 @@ def check_if_dead(func):
 # TODO: problem with descriptors
 # Currently, don't know how to make it beautiful
 
-class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
+class Unit(AbstractUnit, Generic[GenericUnit]):
     # health_scale
     # hit_number
     # defense_percent
@@ -48,11 +49,17 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
         self._health_number = self.health_scale
 
         self._items_inventory = []
+        # sets current `set` with None (active items)
         self._current_set = {
-            "weapon": None,
-            "armor": None,
-            "medallion": None
+            i.value: None for i in UnitItemsSet
         }
+        # sets active items effects to 0
+        self._active_items_stats = {i.value: 0 for i in ItemStats}
+
+    # descriptors
+    @property
+    def active_items_stats(self) -> dict[str, float | int]:
+        return self._active_items_stats
 
     @property
     def experience_now(self):
@@ -143,7 +150,7 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
 
     @property
     def hit_number(self):
-        return self._hit_number
+        return self._hit_number + self._active_items_stats[ItemStats.HIT_NUMBER]
 
     @hit_number.setter
     def hit_number(self, value: int | float):
@@ -164,7 +171,10 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
         self._critical_hit_percentage = value
 
     @check_if_dead
-    def get_hurt(self, value):
+    def get_hurt(self, value: int | float):
+        """
+        Decreases health value for a current unit
+        """
         self._health_number -= int(value)
         print(f"Health number of {self.unique_name} is {self.health_number}")
 
@@ -173,6 +183,9 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
 
     @check_if_dead
     def add_experience(self, other: GenericUnit):
+        """
+        Changes experience value
+        """
         self._experience_now += other.killing_unit_experience
         print(f"Add {other.killing_unit_experience} experience to {self.unique_name}")
 
@@ -180,26 +193,42 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
             self._experience_now = self._experience_now - self.experience_scale
             self.level_up()
 
-    @check_if_dead
-    def attack(self, other: GenericUnit):
-        critical = (
-            self.hit_number * self.critical_hit_percentage
+    def _calculate_critical_value(self):
+        """
+        Calculates a value of a critical hit for the unit
+        """
+        return (
+            (self.hit_number + self._active_items_stats[ItemStats.HIT_NUMBER.value]) * self.critical_hit_percentage
             if random.random() <= self.critical_hit_percentage_occurrence
             else 0
         )
+
+    @check_if_dead
+    def attack(self, other: GenericUnit):
+        """
+        Calculates a hit value for a current item and decrease health value for another
+        """
+        critical = self._calculate_critical_value()
         reduce_health_number = self.hit_number - (self.hit_number * other.defence_percent) - critical
         print(f"{self.unique_name} attack {other.unique_name} with {reduce_health_number} points")
         other.get_hurt(reduce_health_number)
 
         if not other:
+            # if other unit is dead than current unit gets experience
             self.add_experience(other)
 
     def die(self):
+        """
+        Marks a unit as dead (inactive)
+        """
         self._active = False
         print(f"{self.unique_name} is dead now...")
 
     @check_if_dead
     def level_up(self):
+        """
+        Raises a level of a unit and stats
+        """
         self._level += 1
         self.experience_scale = (self.experience_scale * math.pi) / 3
         self.health_scale = (self.health_scale * math.pi) / 3
@@ -219,10 +248,17 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
 
     @check_if_dead
     def add_item(self, item: GenericItem):
+        """
+        Adds item to the inventory list
+        """
         self._items_inventory.append(item)
 
     @check_if_dead
-    def equip(self):
+    def equip(self) -> None:
+        """
+        Checks an inventory of a unit and chooses the best item that
+        will be added in the current set
+        """
         for stat in self._current_set:
             try:
                 better_item = max(
@@ -233,3 +269,15 @@ class ArmyUnit(AbstractUnit, Generic[GenericUnit]):
                 self._current_set[stat] = None
             else:
                 self._current_set[stat] = better_item
+
+    def __hash__(self):
+        return hash(self.unique_name)
+
+    def _calculate_active_items_stats(self):
+        """
+        Calculates general active items stats and puts them
+        into _active_items_stats dictionary
+        """
+        for item_stat_name in [i.value for i in ItemStats]:
+            stat_value = sum([getattr(i, item_stat_name) for i in self._current_set.values() if i])
+            self._active_items_stats[item_stat_name] = stat_value

@@ -1,8 +1,7 @@
-from generic_unit import ArmyUnit
-from items import Sword, PowerfulBow, CoolSword, SoSword
+from generic_unit import Unit
 
 
-class DefaultUnit(ArmyUnit):
+class DefaultUnit(Unit):
     health_scale = 100
     hit_number = 10
     defence_percent = 0.05
@@ -28,11 +27,3 @@ class Mage(DefaultUnit):
     health_scale = 70
     defence_percent = 0.01
     hit_number = 130
-
-
-k = Knight()
-for i in [Sword(), PowerfulBow(), CoolSword(), SoSword()]:
-    k.add_item(i)
-print(k._items_inventory)
-print(k.equip())
-print(k.current_set)

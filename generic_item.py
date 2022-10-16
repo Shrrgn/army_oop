@@ -1,15 +1,28 @@
 from typing import TypeVar, Generic
 
 from abstract_item import AbstractItem
+from utils import ItemStats
 
 GenericItem = TypeVar('GenericItem')  # I am not sure that it is correct
 
 
-class BaseItem(AbstractItem, Generic[GenericItem]):
+class Item(AbstractItem, Generic[GenericItem]):
 
-    def __init__(self):
-        self._name = self.__class__.__name__
+    def __init__(
+            self,
+            name: str,
+            set_type: str,
+            unit_types: list[str],
+            hit_number: int | float = 0,
+            defence: int | float = 0,
+    ):
+        self._name = name
+        self.hit_number = hit_number
+        self.defence = defence
+        self.set_type = set_type
+        self.unit_types = unit_types
 
+    # getters and setters
     @property
     def set_type(self):
         return self._set_type
@@ -27,12 +40,12 @@ class BaseItem(AbstractItem, Generic[GenericItem]):
         self._unit_types = value
 
     @property
-    def health(self):
-        return self._health
+    def hit_number(self):
+        return self._hit_number
 
-    @health.setter
-    def health(self, value):
-        self._health = value
+    @hit_number.setter
+    def hit_number(self, value):
+        self._hit_number = value
 
     @property
     def defence(self):
@@ -47,16 +60,34 @@ class BaseItem(AbstractItem, Generic[GenericItem]):
         return self._name
 
     def _calculate_item_score(self):
-        item_stats = ["health", "defence"]
+        """
+        Calculates the item score that is base on stats (private method)
+        """
+        item_stats = [i.value for i in ItemStats]
 
         return sum([getattr(self, stat) for stat in item_stats]) / len(item_stats)
 
     @property
     def score(self):
+        """
+        Calculates the item score that is base on stats
+        """
         return self._calculate_item_score()
 
     def __eq__(self, other: GenericItem):
+        """
+        Checks if two items are equal by stats
+        """
         return self.set_type == other.set_type and self.score == other.score
 
     def __gt__(self, other: GenericItem):
+        """
+        Checks if one item is better than another
+        """
         return self.set_type == other.set_type and self.score > other.score
+
+    def __repr__(self):
+        return f"{self.name}"
+
+    def __hash__(self):
+        return hash(f"{self.name}")
