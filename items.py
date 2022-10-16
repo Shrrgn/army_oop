@@ -1,7 +1,7 @@
 import random
 
 from generic_item import Item
-from utils import ItemStats
+from utils import ItemStats, SingletonMeta, UnitItemsSet
 
 KNIGHT_WEAPON = ["Sword", "Dagger", "Katana", "Sickle", "Hammer"]
 ARCHER_WEAPON = ["Bow"]
@@ -34,20 +34,50 @@ ITEM_CONDITIONS = {
 }
 
 
-def generate_items(number: int = 10):
-    weapons_list = []
-    for i in range(number):
-        unit_type = random.choice(list(UNIT_WEAPONS.keys()))
-        weapon = random.choice(list(UNIT_WEAPONS[unit_type]))
-        item_condition = random.choice(list(ITEM_CONDITIONS.keys()))
-        item = Item(
-            name=f"{item_condition} {weapon}",
-            set_type="weapon",
-            unit_types=[unit_type],
-            hit_number=DEFAULT_ITEM_STATS["hit_number"] + ITEM_CONDITIONS[item_condition]
-        )
-        weapons_list.append(item)
+class ItemGenerator(metaclass=SingletonMeta):
+    # TODO: change to make it work with defence_percentage
+    # TODO: generate items with a few different stats
+    def __init__(self, weapons_number: int):
+        self._weapons_number = weapons_number
+        self._items_inventory = []
 
-    return set(weapons_list)
+    @property
+    def inventory(self) -> list[Item]:
+        return self._items_inventory
 
-print(generate_items())
+    def _generate_weapons(self):
+        """
+        Generates weapons based on unit types and a condition of an item
+        """
+        weapons_list = []
+
+        for i in range(self._weapons_number):
+            unit_type = random.choice(list(UNIT_WEAPONS.keys()))
+            weapon = random.choice(list(UNIT_WEAPONS[unit_type]))
+            item_condition = random.choice(list(ITEM_CONDITIONS.keys()))
+
+            item = Item(
+                name=f"{item_condition} {weapon}",
+                set_type=UnitItemsSet.WEAPON.value,
+                unit_types=[unit_type],
+            )
+            setattr(
+                item,
+                ItemStats.HIT_NUMBER.value,
+                DEFAULT_ITEM_STATS[ItemStats.HIT_NUMBER.value] + ITEM_CONDITIONS[item_condition]
+            )
+            weapons_list.append(item)
+
+        self._items_inventory.extend(list(set(weapons_list)))
+
+    def generate_items(self):
+        """
+        Generates items of different types
+        """
+        self._generate_weapons()
+
+    def clear(self):
+        """
+        Clears inventory list
+        """
+        self._items_inventory = []

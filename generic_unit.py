@@ -5,21 +5,10 @@ from typing import Generic, TypeVar
 
 from abstract_unit import AbstractUnit
 from generic_item import GenericItem
-from utils import UnitItemsSet, ItemStats
+from utils import UnitItemsSet, ItemStats, check_if_dead
 
 
 GenericUnit = TypeVar('GenericUnit')  # I am not sure that it is correct
-
-
-def check_if_dead(func):
-
-    def wrapper(self, *args, **kwargs):
-        if not self:
-            raise Exception(f"Unit {self.__class__.__name__} is dead")
-
-        return func(self, *args, **kwargs)
-
-    return wrapper
 
 
 # TODO: problem with descriptors
