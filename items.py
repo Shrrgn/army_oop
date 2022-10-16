@@ -3,6 +3,7 @@ import random
 from generic_item import Item
 from utils import ItemStats, SingletonMeta, UnitItemsSet
 
+
 KNIGHT_WEAPON = ["Sword", "Dagger", "Katana", "Sickle", "Hammer"]
 ARCHER_WEAPON = ["Bow"]
 MAGE_WEAPON = ["Stick", "Staff"]
@@ -64,7 +65,7 @@ class ItemGenerator(metaclass=SingletonMeta):
             setattr(
                 item,
                 ItemStats.HIT_NUMBER.value,
-                DEFAULT_ITEM_STATS[ItemStats.HIT_NUMBER.value] + ITEM_CONDITIONS[item_condition]
+                DEFAULT_ITEM_STATS[ItemStats.HIT_NUMBER] + ITEM_CONDITIONS[item_condition]
             )
             weapons_list.append(item)
 
