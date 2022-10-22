@@ -1,15 +1,25 @@
 from enum import Enum, unique
 
 
+class BaseEnum(Enum):
+    @classmethod
+    def values(cls):
+        return [i.value for i in cls.__iter__()]
+
+    @classmethod
+    def labels(cls):
+        return cls._member_names_
+
+
 @unique
-class UnitItemsSet(Enum):
+class UnitItemsSet(BaseEnum):
     WEAPON = "weapon"
     ARMOR = "armor"
     MEDALLION = "medallion"
 
 
 @unique
-class ItemStats(Enum):
+class ItemStats(BaseEnum):
     HIT_NUMBER = "hit_number"
     DEFENCE = "defence"
 

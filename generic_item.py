@@ -63,9 +63,7 @@ class Item(AbstractItem, Generic[GenericItem]):
         """
         Calculates the item score that is base on stats (private method)
         """
-        item_stats = [i.value for i in ItemStats]
-
-        return sum([getattr(self, stat) for stat in item_stats]) / len(item_stats)
+        return sum([getattr(self, stat) for stat in ItemStats.values()]) / len(ItemStats.values())
 
     @property
     def score(self):

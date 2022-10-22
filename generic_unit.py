@@ -40,10 +40,10 @@ class Unit(AbstractUnit, Generic[GenericUnit]):
         self._items_inventory = []
         # sets current `set` with None (active items)
         self._current_set = {
-            i.value: None for i in UnitItemsSet
+            i: None for i in UnitItemsSet.values()
         }
         # sets active items effects to 0
-        self._active_items_stats = {i.value: 0 for i in ItemStats}
+        self._active_items_stats = {i: 0 for i in ItemStats.values()}
 
     # descriptors
     @property
@@ -267,6 +267,6 @@ class Unit(AbstractUnit, Generic[GenericUnit]):
         Calculates general active items stats and puts them
         into _active_items_stats dictionary
         """
-        for item_stat_name in [i.value for i in ItemStats]:
+        for item_stat_name in ItemStats.values():
             stat_value = sum([getattr(i, item_stat_name) for i in self._current_set.values() if i])
             self._active_items_stats[item_stat_name] = stat_value
